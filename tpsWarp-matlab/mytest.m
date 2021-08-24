@@ -20,13 +20,15 @@ line([Zp(:, 1)'; Zs(:, 1)'], [Zp(:, 2)'; Zs(:, 2)']);
 interp.method = 'nearest';
 interp.radius = 10;
 interp.power = 2;
-% Xw, Yw are the transformed coordinates using warp. here I found Xw and Yw are reverse.
+% Xw, Yw are the transformed coordinates using warp.
 [Xw, Yw, imgw, imgwr, map] = tpswarp(im, outDim, Zp, Zs, interp); 
 
 figure; imshow(uint8(imgw)); hold on;
-plot(Zs(:, 1), Zs(:, 2), 'bo')
-%plot(Yw, Xw);
-plot(Yw(Zp(:, 2)*W+Zp(:, 1)), Xw(Zp(:, 2)*W+Zp(:, 1)), 'yo')
+plot(Zs(:, 1), Zs(:, 2), 'bx')
+
+% column first, index is (x-1)*h + y
+plot(Xw((Zp(:, 1)-1)*H+Zp(:, 2)), Yw((Zp(:, 1)-1)*H+Zp(:, 2)), 'go')
+
 figure; imshow(uint8(imgw));
 
 return

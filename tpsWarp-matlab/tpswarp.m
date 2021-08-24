@@ -61,6 +61,49 @@ end
 
 % Compute thin-plate spline mapping [W|a1 ax ay] using landmarks
 [wL]=computeWl(Xp, Yp, NPs);
+
+if 0  % uncertainty
+    d_mean = mean(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
+    d_med = median(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
+    d_max = max(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
+    l =2.5*d_med %d_mean * 2
+    beta = 1
+    % uncertainty = [1 1 1 1] 
+    % uncertainty = [5, 3, 2, 2]
+    uncertainty = [1, 5, 1, 1]
+
+    % s = 1 / sum(1./uncertainty)
+    % D = diag(1./uncertainty)
+    % D = s.*D  % normalize
+    % D = D.^beta  % adjust contrast
+    % D = D ./ sum(diag(D))   % normalize
+    % D_inv = inv(D)
+
+
+    s = 1 / sum(uncertainty)
+    D_inv = s * diag(uncertainty)   % normalize
+    D_inv = D_inv.^beta  % adjust contrast
+    D_inv = D_inv ./ sum(diag(D_inv))   % normalize
+    % D_inv = 1/s .* D_inv
+
+    if l == 0
+        lambda = 0
+    else
+        lambda = radialBasis(l) % 2 * l * l * log(l)
+    end
+    np = NPs
+    rXp = repmat(Xp(:),1,np); % 1xNp to NpxNp
+    rYp = repmat(Yp(:),1,np); % 1xNp to NpxNp
+
+    wR = sqrt((rXp-rXp').^2 + (rYp-rYp').^2); % compute r(i,j)
+
+    wK = radialBasis(wR); % compute [K] with elements U(r)=r^2 * log (r^2)
+    %wK = wK + lambda*eye(np);
+    wK = wK + lambda*D_inv  % uncertainty
+    wP = [ones(np,1) Xp(:) Yp(:)]; % [P] = [1 xp' yp'] where (xp',yp') are n landmark points (nx2)
+    wL = [wK wP;wP' zeros(3,3)]; % [L] = [[K P];[P' 0]]
+end
+
 wY = [Xs(:) Ys(:); zeros(3,2)]; % Y = ( V| 0 0 0)'   where V = [G] where G is landmark homologous (nx2) ; Y is col vector of length (n+3)
 wW = inv(wL)*wY; % (W|a1 ax ay)' = inv(L)*Y
 
@@ -71,7 +114,7 @@ wW = inv(wL)*wY; % (W|a1 ax ay)' = inv(L)*Y
 %% Warping
 
 % input grid for warping
-[X Y] = meshgrid(1:imgH,1:imgW); % HxW
+[X Y] = meshgrid(1:imgW,1:imgH); % HxW
 
 % Nearest neighbor or inverse distance weighted based interpolation
 [imgw,imgwr,map] = interp2d(X(:), Y(:), img, Xw, Yw, outH, outW, interp);
@@ -100,7 +143,7 @@ return
 % (xp, yp) - coordinate of landmark points
 function [Xw, Yw]=tpsMap(wW, imgH, imgW, xp, yp, np)
 
-[X Y] = meshgrid(1:imgH,1:imgW); % HxW
+[X Y] = meshgrid(1:imgW,1:imgH); % HxW
 X=X(:)'; % convert to 1D array by reading columnwise (NWs=H*W)
 Y=Y(:)'; % convert to 1D array (NWs)
 NWs = length(X); % total number of points in the plane
@@ -123,6 +166,16 @@ wL = [wK;wP]'; % [L] = [[K P];[P' 0]]
 Xw  = wL*wW(:,1); % [Pw] = [L]*[W]
 Yw  = wL*wW(:,2); % [Pw] = [L]*[W]
 
+% xp
+% xp2 = repmat(xp(:), 1, 4)
+% yp2 = repmat(yp(:), 1, 4)
+% d = sqrt((xp2 - xp2').^2 + (yp2-yp2').^2)
+% r = radialBasis(d)
+% ph = [ones(4, 1), xp(:), yp(:)]
+% l = [r, ph]
+% pp = l * wW
+% Xw((xp(:)-1)*imgH+yp(:))
+% Yw((xp(:)-1)*imgH+yp(:))
 return
 
 %% k=(r^2) * log(r)

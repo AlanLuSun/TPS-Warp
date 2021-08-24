@@ -37,12 +37,12 @@ Xwi = round(Xwr);
 Ywi = round(Ywr);
 
 % Bound warped coordinates to image frame
-Xwi = max(min(Xwi,outH),1);
-Ywi = max(min(Ywi,outW),1);
+Xwi = max(min(Xwi,outW),1);
+Ywi = max(min(Ywi,outH),1);
 
 % Convert 2D coordinates into 1D indices
-fiw = sub2ind([outH,outW],Xwi,Ywi); % warped coordinates
-fip = sub2ind([imgH,imgW],X,Y); % input
+fiw = sub2ind([outH,outW],Ywi,Xwi); % warped coordinates
+fip = sub2ind([imgH,imgW],Y,X); % input
 
 %% Warped image construction with holes
 % Note: This mapping doesn't treat 2 or more points (from source image)
