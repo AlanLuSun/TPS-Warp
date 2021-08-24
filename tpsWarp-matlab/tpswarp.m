@@ -182,8 +182,8 @@ return
 function [ko]=radialBasis(ri)
 
 r1i = ri;
-r1i(find(ri==0))=realmin; % Avoid log(0)=inf
-%ko = 2*(ri.^2).*log(r1i);
-ko = (ri.^2).*log(r1i);
+r1i(find(ri==0))=realmin; % Avoid log(0)=inf, the main diagonal elements are equal to 0
+ko = 2*(ri.^2).*log(r1i);  % namely equal to (ri.^2).*log(r1i.^2)
+%ko = (ri.^2).*log(r1i);
 
 return
