@@ -59,32 +59,34 @@ end
 
 %% Algebra of Thin-plate splines
 
-% Compute thin-plate spline mapping [W|a1 ax ay] using landmarks
-[wL]=computeWl(Xp, Yp, NPs);
+if 1
+    % Compute thin-plate spline mapping [W|a1 ax ay] using landmarks
+    [wL]=computeWl(Xp, Yp, NPs);
 
-if 0  % uncertainty
+else  % uncertainty
     d_mean = mean(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
     d_med = median(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
     d_max = max(sqrt((Xp-Xs).^2 + (Yp-Ys).^2))
-    l =2.5*d_med %d_mean * 2
+    l =0.5*d_med %d_mean * 2
     beta = 1
     % uncertainty = [1 1 1 1] 
     % uncertainty = [5, 3, 2, 2]
     uncertainty = [1, 5, 1, 1]
 
-    % s = 1 / sum(1./uncertainty)
-    % D = diag(1./uncertainty)
-    % D = s.*D  % normalize
-    % D = D.^beta  % adjust contrast
-    % D = D ./ sum(diag(D))   % normalize
-    % D_inv = inv(D)
+    D = 1 ./ uncertainty
+    D = D / sum(D)  % normalize
+    D = D.^beta  % adjust contrast
+    D = D ./ sum(D)   % normalize
+    D_inv = 1 ./ D
+    D_inv = diag(D_inv)
 
 
-    s = 1 / sum(uncertainty)
-    D_inv = s * diag(uncertainty)   % normalize
-    D_inv = D_inv.^beta  % adjust contrast
-    D_inv = D_inv ./ sum(diag(D_inv))   % normalize
-    % D_inv = 1/s .* D_inv
+%     s = sum(uncertainty)
+%     D_inv = uncertainty ./ s   % normalize
+%     D_inv = D_inv.^beta  % adjust contrast
+%     D_inv = D_inv ./ sum(D_inv)   % normalize
+%     % D_inv = s .* D_inv
+%     D_inv = diag(D_inv)
 
     if l == 0
         lambda = 0
@@ -183,7 +185,7 @@ function [ko]=radialBasis(ri)
 
 r1i = ri;
 r1i(find(ri==0))=realmin; % Avoid log(0)=inf, the main diagonal elements are equal to 0
-ko = 2*(ri.^2).*log(r1i);  % namely equal to (ri.^2).*log(r1i.^2)
-%ko = (ri.^2).*log(r1i);
+%ko = 2*(ri.^2).*log(r1i);  % namely equal to (ri.^2).*log(r1i.^2)
+ko = (ri.^2).*log(r1i);
 
 return
